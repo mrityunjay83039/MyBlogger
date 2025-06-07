@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [redirect , setRedirect] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -12,15 +16,26 @@ const Login = () => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
+
       const data = await res.json();
-      alert(data?.message);
-      console.log("loginres: ", data);
+      if(data.success){
+        alert(data.message)
+        setRedirect(true);
+      }else{
+        alert('wrong credentials');
+      }
+    
     } catch (error) {
       console.log("error while login: ", error);
     }
   };
+
+  if(redirect){
+    return navigate("/");
+  }
 
   return (
     <form className="login" onSubmit={handleLogin}>

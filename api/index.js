@@ -4,11 +4,15 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const UserModel = require("./models/UserModel");
 const app = express();
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 dotenv.config();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    credentials: true,
+    origin: "http://localhost:5173",
+}));
 
 mongoose.connect(process.env.DB_CONNECTION);
 const salt = bcrypt.genSaltSync(10);
@@ -32,9 +36,6 @@ app.post("/register", async (req, res) => {
       data: error,
     });
   }
-  const user = await UserModel.create({ username, password });
-  res.json(user);
-  res.end();
 });
 
 // User login
@@ -44,11 +45,21 @@ app.post("/login", async (req, res) => {
   const isPasswordSame = bcrypt.compareSync(password, user.password);
   try {
     if (isPasswordSame) {
-      res.status(200).json({
+      const token = jwt.sign(
+        { username: user.username, id: user._id },
+        process.env.SECRET_KEY,
+        { expiresIn: '24h' } 
+      );
+      res.cookie('token', token, {
+        // httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, //24h
+      })
+      res.json({
         success: true,
-        message: "User logged in successfully",
-        data: user,
+        message: "Login successful",
       });
+
+
     } else {
       res.status(401).json({
         success: false,
@@ -65,6 +76,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
+app.listen(process.env.PORT, () => {
   console.log("Server is running on port 5000");
 });
