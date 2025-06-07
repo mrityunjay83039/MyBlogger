@@ -4,17 +4,21 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const UserModel = require("./models/UserModel");
 const app = express();
+const bcrypt = require('bcryptjs');
 dotenv.config();
 
 app.use(express.json());
 app.use(cors());
 
 mongoose.connect(process.env.DB_CONNECTION);
+const salt = bcrypt.genSaltSync(10);
 
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, salt);
+  
   try {
-    const user = await UserModel.create({ username, password });
+    const user = await UserModel.create({ username, password:hashedPassword });
     res.status(201).json({
       success: true,
       message: "User created successfully",
