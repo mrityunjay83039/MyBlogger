@@ -5,6 +5,7 @@ import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CreatePost from "./pages/CreatePost";
+import SinglePost from "./components/SinglePost";
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/login" element={<Login/>} />
         <Route path="/register" element={<Register />} />
         <Route path="/create" element={<CreatePost/>} />
+        <Route path="/post/:id" element={<SinglePost/>} />
       </Route>
     </Routes>
   );

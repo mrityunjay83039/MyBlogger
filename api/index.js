@@ -8,7 +8,7 @@ const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const fs = require("fs");
-const path = require('path');
+const path = require("path");
 dotenv.config();
 
 //models
@@ -23,7 +23,7 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'));
+app.use("/uploads", express.static(__dirname + "/uploads"));
 
 const uploadMiddleWare = multer({ dest: "uploads/" });
 
@@ -117,7 +117,7 @@ app.post("/post", uploadMiddleWare.single("files"), (req, res) => {
     const partdata = originalname.split(".");
     const extension = partdata[partdata.length - 1];
     newFilePath = path + "." + extension;
-    newFilePath = newFilePath.replace(/\\/g, '/');
+    newFilePath = newFilePath.replace(/\\/g, "/");
     fs.renameSync(path, newFilePath);
   }
 
@@ -151,6 +151,16 @@ app.get("/all-posts", async (req, res) => {
   res.json({
     success: true,
     data: posts,
+  });
+});
+
+// get single post by id
+app.get("/post/:id", async (req, res) => {
+  const { id } = req.params;
+  const post = await PostModel.findById(id);
+  res.json({
+    success: true,
+    data: post,
   });
 });
 
