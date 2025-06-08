@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Editor from "../components/Editor";
+import {useNavigate} from 'react-router-dom';
 
 const CreatePost = () => {
   const [title, setTitle] = useState("");
@@ -7,6 +8,8 @@ const CreatePost = () => {
   const [content, setContent] = useState("");
   const [files, setFiles] = useState("");
   const [redirect, setRedirect] = useState(false);
+
+  const navigate = useNavigate();
 
   const createNewPost = async (e) => {
     const data = new FormData();
@@ -31,6 +34,10 @@ const CreatePost = () => {
       console.log("creating blog post: ", error);
     }
   };
+
+  if(redirect){
+    return navigate('/');
+  }
 
   return (
     <form onSubmit={createNewPost}>
