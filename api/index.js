@@ -2,19 +2,28 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const UserModel = require("./models/UserModel");
 const app = express();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
+const multer = require("multer");
+const fs = require("fs");
 dotenv.config();
 
+//models
+const UserModel = require("./models/UserModel");
+const PostModel = require("./models/PostModel");
+
 app.use(express.json());
-app.use(cors({
+app.use(
+  cors({
     credentials: true,
     origin: "http://localhost:5173",
-}));
+  })
+);
 app.use(cookieParser());
+
+const uploadMiddleWare = multer({ dest: "uploads/" });
 
 mongoose.connect(process.env.DB_CONNECTION);
 const salt = bcrypt.genSaltSync(10);
@@ -50,19 +59,17 @@ app.post("/login", async (req, res) => {
       const token = jwt.sign(
         { username: user.username, id: user._id },
         process.env.SECRET_KEY,
-        { expiresIn: '24h' } 
+        { expiresIn: "24h" }
       );
-      res.cookie('token', token, {
+      res.cookie("token", token, {
         // httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, //24h
-      })
+      });
       res.json({
         success: true,
         message: "Login successful",
-        data: {username: user.username, id: user._id },
+        data: { username: user.username, id: user._id },
       });
-
-
     } else {
       res.status(401).json({
         success: false,
@@ -80,26 +87,56 @@ app.post("/login", async (req, res) => {
 });
 
 // User Profile
-app.get('/profile', (req, res)=>{
-    const {token} = req.cookies;
-    if(!token){
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-        });
-    }
-    // Verify token
-    jwt.verify(token, process.env.SECRET_KEY, (err, userInfo) =>{
-        if(err) throw err;
-        res.json(userInfo)
-    })
-})
+app.get("/profile", (req, res) => {
+  const { token } = req.cookies;
+  if (!token) {
+    res.status(401).json({
+      success: false,
+      error: "Unauthorized",
+    });
+  }
+  // Verify token
+  jwt.verify(token, process.env.SECRET_KEY, (err, userInfo) => {
+    if (err) throw err;
+    res.json(userInfo);
+  });
+});
 
 // Logout
-app.post('/logout', (req, res) =>{
-    res.cookie('token', '').json('ok');
+app.post("/logout", (req, res) => {
+  res.cookie("token", "").json("ok");
+});
 
-})
+// Create Post
+app.post("/post", uploadMiddleWare.single("files"), (req, res) => {
+  let newFilePath = null;
+  if (req.file) {
+    const { originalname, path } = req.file; 
+    const partdata = originalname.split(".");
+    const extension = partdata[partdata.length - 1];
+    newFilePath = path + "." + extension;
+    fs.renameSync(path, newFilePath);
+  }
+
+ const {token} = req.cookies;
+
+  jwt.verify(token, process.env.SECRET_KEY, {}, async (err, data) => {
+    if (err) throw err;
+    const { title, summary, content } = req.body;
+    const PostDoc = await PostModel.create({
+      title,
+      summary,
+      content,
+      image: newFilePath,
+      author: data.id,
+    });
+    res.json({
+      success: true,
+      message: "Post created successfully",
+      
+    });
+  });
+});
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port 5000");

@@ -8,9 +8,29 @@ const CreatePost = () => {
   const [files, setFiles] = useState("");
   const [redirect, setRedirect] = useState(false);
 
-  const createNewPost = async(e)=>{
+  const createNewPost = async (e) => {
+    const data = new FormData();
+    data.append("title", title);
+    data.append("summary", summary);
+    data.append("content", content);
+    data.append("files", files[0]);
+
     e.preventDefault();
-  }
+    try {
+      let res = await fetch("http://localhost:5000/post", {
+        method: "POST",
+        body: data,
+        credentials: "include",
+      });
+      res = await res.json();
+      if (res.success) {
+        alert(res.message);
+        setRedirect(true);
+      }
+    } catch (error) {
+      console.log("creating blog post: ", error);
+    }
+  };
 
   return (
     <form onSubmit={createNewPost}>
