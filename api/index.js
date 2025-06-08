@@ -27,7 +27,14 @@ app.use("/uploads", express.static(__dirname + "/uploads"));
 
 const uploadMiddleWare = multer({ dest: "uploads/" });
 
-mongoose.connect(process.env.DB_CONNECTION);
+mongoose
+  .connect(process.env.DB_CONNECTION)
+  .then((res) => {
+    console.log("Database connected");
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 const salt = bcrypt.genSaltSync(10);
 
 // User registration
@@ -137,6 +144,50 @@ app.post("/post", uploadMiddleWare.single("files"), (req, res) => {
       success: true,
       message: "Post created successfully",
       data: PostDoc,
+    });
+  });
+});
+
+// Update Posts
+app.put("/post", uploadMiddleWare.single("file"), async (req, res) => {
+  const { token } = req.cookies;
+  let newFilePath = null;
+  if (req.file) {
+    const { originalname, path } = req.file;
+    const partdata = originalname.split(".");
+    const extension = partdata[partdata.length - 1];
+    newFilePath = path + "." + extension;
+    newFilePath = newFilePath.replace(/\\/g, "/");
+    fs.renameSync(path, newFilePath);
+  }
+
+  jwt.verify(token, process.env.SECRET_KEY, {}, async (err, data) => {
+    if (err) throw err;
+    const { title, summary, content, id } = req.body;
+    const PostData = await PostModel.findById(id);
+    const isAuthor =
+      JSON.stringify(PostData.author) === JSON.stringify(data.id);
+    if (!isAuthor) {
+      return res.status(400).json({
+        success: false,
+        message: "You are not the author of this post!",
+      });
+    }
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      id,
+      {
+        title,
+        summary,
+        content,
+        cover: newFilePath || PostData.cover,
+      },
+      { new: true } // Returns the updated document
+    );
+
+    res.json({
+      success: true,
+      message: "Post updated successfully",
+      data: updatedPost,
     });
   });
 });
