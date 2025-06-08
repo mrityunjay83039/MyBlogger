@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const fs = require("fs");
+const path = require('path');
 dotenv.config();
 
 //models
@@ -22,6 +23,7 @@ app.use(
   })
 );
 app.use(cookieParser());
+app.use('/uploads', express.static(__dirname + '/uploads'));
 
 const uploadMiddleWare = multer({ dest: "uploads/" });
 
@@ -111,14 +113,15 @@ app.post("/logout", (req, res) => {
 app.post("/post", uploadMiddleWare.single("files"), (req, res) => {
   let newFilePath = null;
   if (req.file) {
-    const { originalname, path } = req.file; 
+    const { originalname, path } = req.file;
     const partdata = originalname.split(".");
     const extension = partdata[partdata.length - 1];
     newFilePath = path + "." + extension;
+    newFilePath = newFilePath.replace(/\\/g, '/');
     fs.renameSync(path, newFilePath);
   }
 
- const {token} = req.cookies;
+  const { token } = req.cookies;
 
   jwt.verify(token, process.env.SECRET_KEY, {}, async (err, data) => {
     if (err) throw err;
@@ -127,14 +130,27 @@ app.post("/post", uploadMiddleWare.single("files"), (req, res) => {
       title,
       summary,
       content,
-      image: newFilePath,
+      cover: newFilePath,
       author: data.id,
     });
     res.json({
       success: true,
       message: "Post created successfully",
-      
+      data: PostDoc,
     });
+  });
+});
+
+// get all posts
+
+app.get("/all-posts", async (req, res) => {
+  const posts = await PostModel.find()
+    .populate("author", ["username"])
+    .sort({ createdAt: -1 })
+    .limit(20);
+  res.json({
+    success: true,
+    data: posts,
   });
 });
 
