@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import CreatePost from "./pages/CreatePost";
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route index element={<Homepage/>} />
         <Route path="/login" element={<Login/>} />
         <Route path="/register" element={<Register />} />
+        <Route path="/create" element={<CreatePost/>} />
       </Route>
     </Routes>
   );

@@ -6,30 +6,30 @@ import { UserContext } from "../contexts/UserContext";
 const Header = () => {
   const { userInfo, setUserInfo } = useContext(UserContext);
 
-  useEffect(() => {
-    const getUserProfileInfo = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/profile", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+  // useEffect(() => {
+  //   const getUserProfileInfo = async () => {
+  //     try {
+  //       const res = await fetch("http://localhost:5000/profile", {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
 
-        if (res.ok) {
-          const data = await res.json();
-          console.log("userprofile: ", data);
-        }
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         console.log("userprofile: ", data);
+  //       }
 
-        if (!res.success) {
-          alert(res.error);
-        }
-      } catch (error) {
-        console.error("getting user profile: ", error);
-      }
-    };
-    getUserProfileInfo();
-  }, []);
+  //       if (!res.success) {
+  //         alert(res.error);
+  //       }
+  //     } catch (error) {
+  //       console.error("getting user profile: ", error);
+  //     }
+  //   };
+  //   getUserProfileInfo();
+  // }, []);
 
   const userLogout = async () => {
     const res = await fetch("http://localhost:5000/logout", {
